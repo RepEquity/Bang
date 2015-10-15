@@ -6,7 +6,7 @@ var sourcemaps = require('gulp-sourcemaps');
 var autoprefixer = require('gulp-autoprefixer');
 var compass = require('gulp-compass');
 var jshint = require('gulp-jshint');
-var livereload = require('gulp-livereload');
+var browserSync = require('browser-sync');
 var browserify = require('browserify');
 var babelify = require('babelify');
 var notify = require('gulp-notify');
@@ -37,7 +37,20 @@ gulp.task('styles', function() {
   .pipe(sourcemaps.init())
   .pipe(sourcemaps.write('.'))
   .pipe(gulp.dest('stylesheets'))
+  .pipe(browserSync.reload({
+      stream: true
+  }))
   .pipe(notify({ message: 'sass task complete' }));
+});
+
+// Browser Sync
+gulp.task('browserSync', function() {
+  browserSync.init({
+    open: 'external',
+    host: 'bang.dev',
+    proxy: 'bang.dev',
+    port: 3000 // port 80 is not accessible by anyone but root
+  });
 });
 
 // Lint JS
@@ -60,7 +73,7 @@ gulp.task('browserify', function() {
 });
 
 // Watch for changes
-gulp.task('watch', function() {
+gulp.task('watch', ['browserSync'], function() {
 
   // Watch .scss files
   gulp.watch('sass/**/*.scss', ['styles']);
@@ -69,11 +82,8 @@ gulp.task('watch', function() {
   gulp.watch('js/es6/*.js', ['lint']);
   gulp.watch('js/es6/*.js', ['browserify']);
 
-  // Create LiveReload server
-  livereload.listen();
-
   // Watch any files in public/, reload on change
-  gulp.watch(['stylesheets', 'js']).on('change', livereload.changed);
+  gulp.watch(['stylesheets', 'js']).on('change', browserSync.reload);
 
   runExpress();
 });
